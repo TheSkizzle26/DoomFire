@@ -9,8 +9,8 @@
 #define NUM_REPS 2 // number of repetitions, useful for high resolutions
 #define TARGET_FPS 0 // 0 for unlimited
 
-constexpr int RW = (SW / RES / NUM_REPS);
-constexpr int RH = (SH / RES);
+constexpr int RW = SW / RES / NUM_REPS;
+constexpr int RH = SH / RES;
 
 #define SHOW_FPS true
 #define FULLSCREEN true
