@@ -5,15 +5,20 @@
 
 #define SW 1920
 #define SH 1080
-#define RES 4
+#define RES 5
 #define NUM_REPS 2 // number of repetitions, useful for high resolutions
 #define TARGET_FPS 0 // 0 for unlimited
+#define REFRESH_RATE 180
 
 constexpr int RW = SW / RES / NUM_REPS;
 constexpr int RH = SH / RES;
 
 #define SHOW_FPS true
 #define FULLSCREEN true
+
+double lastFrameTime = 0;
+double lastUpdateTime = 0;
+double fps = 0;
 
 
 Color palette[37];
@@ -87,6 +92,10 @@ void update() {
             spreadFire(y * RW + x);
         }
     }
+
+    double curTime = GetTime();
+    fps = 1.0f / (curTime - lastUpdateTime);
+    lastUpdateTime = curTime;
 }
 
 void setPixel(const int x, const int y, const Color color) {
@@ -108,17 +117,28 @@ void renderFire() { // render fire to fireTexture
 }
 
 void render() {
-    if (SHOW_FPS) { // only clear when showing fps, not needed otherwise
-        ClearBackground(BLACK);
-    }
+    if (GetTime() - lastFrameTime >= 1.0f / REFRESH_RATE) {
+        if (SHOW_FPS) { // only clear when showing fps, not needed otherwise
+            ClearBackground(BLACK);
+        }
 
-    renderFire();
-    UpdateTexture(fireTexture, fireTexturePixels);
-    for (int i = 0; i < NUM_REPS; i++) { // render repetitions
-        DrawTextureEx(fireTexture, (Vector2){(float)(i * RW * RES), 0}, 0, RES, WHITE);
-    }
+        renderFire();
+        UpdateTexture(fireTexture, fireTexturePixels);
+        for (int i = 0; i < NUM_REPS; i++) { // render repetitions
+            DrawTextureEx(fireTexture, (Vector2){(float)(i * RW * RES), 0}, 0, RES, WHITE);
+        }
 
-    EndDrawing();
+        if (SHOW_FPS) {
+            char fpsString[15];
+            sprintf(fpsString, "FPS: %d", (int)fps);
+            DrawText(fpsString, 0, 0, 50, WHITE);
+            //SetWindowTitle(fpsString);
+        }
+
+        lastFrameTime = GetTime();
+
+        EndDrawing();
+    }
 }
 
 
@@ -128,18 +148,13 @@ int main(void) {
     if (FULLSCREEN) {
         ToggleFullscreen();
     }
+    SetWindowMonitor(0);
 
     init();
 
     while (!WindowShouldClose()) {
         update();
         render();
-
-        if (SHOW_FPS) { // not in render() because it crashed there???
-            char fpsString[0];
-            sprintf(fpsString, "FPS: %d", GetFPS());
-            DrawText(fpsString, 0, 0, 50, WHITE);
-        }
     }
 
     // unload textures from vram
